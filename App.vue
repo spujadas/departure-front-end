@@ -7,7 +7,7 @@
         </svg>
       </button>
       <nav id="sidebarMenu" class="col-lg-3 bg-light pt-3 sidebar d-lg-block collapse show">
-        <img src="images/departures-logo.png" alt="Departures" class="img-fluid mx-auto d-block" />
+        <img src="images/departure.png" alt="Departure" class="img-fluid mx-auto d-block" />
         <hr/>
 
         <!-- providers -->
