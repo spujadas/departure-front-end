@@ -69,8 +69,12 @@
 </template>
 
 <script>
-module.exports = {
+import { debounce } from 'lodash';
+
+export default {
   name: 'NationalRail',
+
+  inject: ['notyf'],
 
   data() {
     return {
@@ -85,7 +89,7 @@ module.exports = {
 
   methods: {
     // from https://codepen.io/rabelais88/pen/yqQpMy
-    callDebounceSearch: _.debounce(function(){
+    callDebounceSearch: debounce(function(){
       this.search();
     }, 500), // wait for Xms after user has finished typing before searching
 
@@ -98,7 +102,7 @@ module.exports = {
       }
 
       // perform search
-      axios
+      this.axios
         .get('/ns/search/' + this.stationQuery)
         .then(response => (this.results = response.data));
       this.resultsShow = true;
@@ -110,7 +114,7 @@ module.exports = {
     },
 
     startBoardClient() {
-      hasErrors = false;
+      var hasErrors = false;
 
       // station code must be exactly 3 characters long
       if (this.stationCode.length < 2 || this.stationCode.length > 4) {
@@ -120,22 +124,22 @@ module.exports = {
       }
 
       if (hasErrors) {
-        notyf.error("Please correct errors");
+        this.notyf.error("Please correct errors");
         return;
       }
 
       // start board client
-      axios
+      this.axios
         .post(
           '/ns/start-client',
           { 'code': this.stationCode }
         )
         .then((response) => {
             if (response.data.status == "OK") {
-              notyf.success("Showing departures for " + this.stationCode);
+              this.notyf.success("Showing departures for " + this.stationCode);
             }
             else if (response.data.status == "error") {
-              notyf.error(this.stationCode + ": " + response.data.message);
+              this.notyf.error(this.stationCode + ": " + response.data.message);
             }
           }
         );

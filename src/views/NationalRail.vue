@@ -1,6 +1,6 @@
 <template>
-  <div id="sncf">
-    <h1 class="d-lg-none">SNCF</h1>
+  <div id="national-rail">
+    <h1 class="d-lg-none">National Rail</h1>
     <div class="row mt-lg-3">
       <!-- search panel -->
       <div id="search" class="col-lg-6" style="padding-right:20px; border-right: 1px solid rgba(0, 0, 0, 0.1);">
@@ -21,34 +21,34 @@
           <ul class="list-group list-group-flush">
             <li
                 class="list-group-item"
-                v-for="result in sortedResults"
-                :key="result[0]"
-                @click="setStation(result[0])"
+                v-for="(name, code) in results"
+                :key="code"
+                @click="setStation(code)"
             >
-              {{ result[1].nom }}
-              <mark>{{ result[0] }}</mark>
+              {{ name }}
+              <mark>{{code}}</mark>
             </li>
           </ul>
         </div>
 
         <hr class="d-lg-none"/>
-        
+
       </div>
 
       <!-- departures panel -->
       <div id="departures" class="col-lg-6">
         <div class="form-group">
-          <label>Stop area id</label>
+          <label>Station code</label>
           <input
             class="form-control"
-            v-model="stopAreaId"
-            placeholder="e.g. 87393702"
-            @input="stopAreaIdHasErrors = false"
+            v-model="stationCode"
+            placeholder="e.g. VIC"
+            @input="stationCodeHasErrors = false"
             @keyup.enter="startBoardClient"
-            :class="{ 'is-invalid': stopAreaIdHasErrors }"
+            :class="{ 'is-invalid': stationCodeHasErrors }"
           >
           <div class="invalid-feedback">
-            {{ stopAreaIdErrorMessage }}
+            {{ stationCodeErrorMessage }}
           </div>
         </div>
 
@@ -58,7 +58,7 @@
             type="button"
             class="btn btn-primary form-control"
             ref="start"
-            :disabled="!stopAreaId"
+            :disabled="!stationCode"
           >
             ▶ Start board client
           </button>
@@ -69,31 +69,27 @@
 </template>
 
 <script>
-module.exports = {
-  name: 'Sncf',
+import { debounce } from 'lodash';
+
+export default {
+  name: 'NationalRail',
+
+  inject: ['notyf'],
 
   data() {
     return {
       stationQuery: '',
       results: [],
       resultsShow: false,
-      stopAreaId: '',
-      stopAreaIdHasErrors: false,
-      stopAreaIdErrorMessage: ''
-    }
-  },
-
-  computed: {
-    sortedResults() {
-      // sort this.results, e.g.  { "87686006": { "nom": "Paris Gare de Lyon" }, ... },
-      // *.nom -- https://stackoverflow.com/a/37607084/2654646
-      return Object.entries(this.results).sort((a, b) => a[1].nom.localeCompare(b[1].nom));
+      stationCode: '',
+      stationCodeHasErrors: false,
+      stationCodeErrorMessage: ''
     }
   },
 
   methods: {
-    // from https://stopAreaIdpen.io/rabelais88/pen/yqQpMy
-    callDebounceSearch: _.debounce(function(){
+    // from https://codepen.io/rabelais88/pen/yqQpMy
+    callDebounceSearch: debounce(function(){
       this.search();
     }, 500), // wait for Xms after user has finished typing before searching
 
@@ -106,44 +102,44 @@ module.exports = {
       }
 
       // perform search
-      axios
-        .get('/sncf/search/' + this.stationQuery)
+      this.axios
+        .get('/national-rail/search/' + this.stationQuery)
         .then(response => (this.results = response.data));
       this.resultsShow = true;
     },
 
-    setStation(stopAreaId) {
-      this.stopAreaId = stopAreaId;
+    setStation(code) {
+      this.stationCode = code;
       this.startBoardClient();
     },
 
     startBoardClient() {
-      hasErrors = false;
+      var hasErrors = false;
 
-      // station stopAreaId must be exactly 8 characters long
-      if (this.stopAreaId.length != 8) {
-        this.stopAreaIdErrorMessage = "Please enter an 8-figure stop area id";
-        this.stopAreaIdHasErrors = true;
+      // station code must be exactly 3 characters long
+      if (this.stationCode.length != 3) {
+        this.stationCodeErrorMessage = "Please enter a 3-letter station code";
+        this.stationCodeHasErrors = true;
         hasErrors = true;
       }
 
       if (hasErrors) {
-        notyf.error("Please correct errors");
+        this.notyf.error("Please correct errors");
         return;
       }
 
       // start board client
-      axios
+      this.axios
         .post(
-          '/sncf/start-client',
-          { 'stop_area_id': this.stopAreaId }
+          '/national-rail/start-client',
+          { 'code': this.stationCode }
         )
         .then((response) => {
             if (response.data.status == "OK") {
-              notyf.success("Showing departures for " + this.stopAreaId);
+              this.notyf.success("Showing departures for " + this.stationCode);
             }
             else if (response.data.status == "error") {
-              notyf.error(this.stopAreaId + ": " + response.data.message);
+              this.notyf.error(this.stationCode + ": " + response.data.message);
             }
           }
         );

@@ -100,8 +100,10 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   name: 'Admin',
+
+  inject: ['notyf'],
 
   computed: {
     boardServerShutdownButtonDisabled() {
@@ -126,14 +128,14 @@ module.exports = {
 
   methods: {
     shutdownBoardServerHost() {
-      axios
+      this.axios
         .post('/shutdown-board-server')
         .then((response) => {
           if (response.data.status == "OK") {
-            notyf.success("Shutting down board server host");
+            this.notyf.success("Shutting down board server host");
           }
           else if (response.data.status == "error") {
-            notyf.error({
+            this.notyf.error({
               "message": "Could not shut down board server host: "
                 + response.data.message,
               "duration": 4000
@@ -141,7 +143,7 @@ module.exports = {
           }
         })
         .catch((error) =>
-            notyf.error({
+            this.notyf.error({
               "message": "Could not shut down board server host: " + error,
               "duration": 4000
             })
@@ -149,15 +151,15 @@ module.exports = {
     },
 
     shutdownWebServerHost() {
-      axios
+      this.axios
         .post('/shutdown-web-server')
         .then((response) => {
           if (response.data.status == "OK") {
-            notyf.success("Shutting down web server host – bye!");
+            this.notyf.success("Shutting down web server host – bye!");
           }
         })
         .catch((error) =>
-            notyf.error({
+            this.notyf.error({
               "message": "Could not shut down web server host: " + error,
               "duration": 4000
             })
@@ -169,7 +171,7 @@ module.exports = {
       this.refreshing = true;
       this.boardServerUp = false;
       this.webServerUp = false;
-      axios
+      this.axios
         .get('/board-server-status')
         .then((response) => {
           this.webServerUp = true;  // reset
@@ -178,7 +180,7 @@ module.exports = {
           }
           else if (response.data.status == "error") {
             this.boardServerUp = false;
-            notyf.error({
+            this.notyf.error({
               "message": "Could not get board server status: "
                 + response.data.message,
               "duration": 4000
@@ -187,7 +189,7 @@ module.exports = {
           this.refreshing = false;
         })
         .catch((error) => {
-          notyf.error({
+          this.notyf.error({
             "message": "Could not refresh: " + error,
             "duration": 4000
           });

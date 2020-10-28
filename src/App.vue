@@ -7,7 +7,7 @@
         </svg>
       </button>
       <nav id="sidebarMenu" class="col-lg-3 bg-light pt-3 sidebar d-lg-block collapse show">
-        <img src="images/departure.png" alt="Departure" class="img-fluid mx-auto d-block" />
+        <img src="./assets/departure.png" alt="Departure" class="img-fluid mx-auto d-block" />
         <hr/>
 
         <!-- providers -->
@@ -62,67 +62,46 @@
 </template>
 
 <script>
-const Ratp = httpVueLoader('Ratp.vue');
-const Transilien = httpVueLoader('Transilien.vue');
-const Sncf = httpVueLoader('Sncf.vue');
-const NationalRail = httpVueLoader('NationalRail.vue');
-const TflTube = httpVueLoader('TflTube.vue');
-const Ns = httpVueLoader('NS.vue');
-const Admin = httpVueLoader('Admin.vue');
+import axios from 'axios';
 
-const routes = [
-  { path: '/ratp', component: Ratp },
-  { path: '/transilien', component: Transilien },
-  { path: '/sncf', component: Sncf },
-  { path: '/national-rail', component: NationalRail },
-  { path: '/tfl-tube', component: TflTube },
-  { path: '/ns', component: Ns },
-  { path: '/admin', component: Admin },
-]
-
-const router = new VueRouter({
-  routes  // short for `routes: routes`
-})
-
-
-module.exports = {
-  router,  // inject the router option to make the whole app router-aware.
+export default {
+  inject: ['notyf'],
 
   created() {
     this.providers = {
       'tfl-tube': {
         'to': '/tfl-tube',
-        'logoSrc': 'images/tfl-tube.png',
+        'logoSrc': require('./assets/tfl-tube.png'),
         'logoAlt': '[Tube (TfL)]',
         'name': 'London Underground 🇬🇧'
       },
       'national-rail': {
         'to': '/national-rail',
-        'logoSrc': 'images/national-rail.png',
+        'logoSrc': require('./assets/national-rail.png'),
         'logoAlt': '[NR]',
         'name': 'National Rail 🇬🇧'
       },
       'ns': {
         'to': '/ns',
-        'logoSrc': 'images/ns.png',
+        'logoSrc': require('./assets/ns.png'),
         'logoAlt': '[NS]',
         'name': 'Nederlandse Spoorwegen 🇳🇱'
       },
       'ratp': {
         'to': '/ratp',
-        'logoSrc': 'images/ratp.png',
+        'logoSrc': require('./assets/ratp.png'),
         'logoAlt': '[RATP]',
         'name': 'RATP 🇫🇷'
       },
       'sncf': {
         'to': '/sncf',
-        'logoSrc': 'images/sncf.png',
+        'logoSrc': require('./assets/sncf.png'),
         'logoAlt': '[SNCF]',
         'name': 'SNCF 🇫🇷'
       },
       'transilien': {
         'to': '/transilien',
-        'logoSrc': 'images/transilien.png',
+        'logoSrc': require('./assets/transilien.png'),
         'logoAlt': '[Tube (TfL)]',
         'name': 'Transilien 🇫🇷'
       }
@@ -142,13 +121,13 @@ module.exports = {
     stopBoardClient() {
       axios
         .post('/stop-client')
-        .then(response => (notyf.success("Stopped departure board")));
+        .then(() => (this.notyf.success("Stopped departure board")));
     }
   },
 }
 </script>
 
-<style>
+<style scoped>
 .sidebar {
   position: fixed;
   top: 0;

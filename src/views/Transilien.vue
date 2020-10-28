@@ -32,7 +32,7 @@
         </div>
 
         <hr class="d-lg-none"/>
-        
+
       </div>
 
       <!-- departures panel -->
@@ -69,7 +69,9 @@
 </template>
 
 <script>
-module.exports = {
+import { debounce } from 'lodash';
+
+export default {
   name: 'transilien',
 
   data() {
@@ -93,7 +95,7 @@ module.exports = {
 
   methods: {
     // from https://stationIdpen.io/rabelais88/pen/yqQpMy
-    callDebounceSearch: _.debounce(function(){
+    callDebounceSearch: debounce(function(){
       this.search();
     }, 500), // wait for Xms after user has finished typing before searching
 
@@ -106,7 +108,7 @@ module.exports = {
       }
 
       // perform search
-      axios
+      this.axios
         .get('/transilien/search/' + this.stationQuery)
         .then(response => (this.results = response.data));
       this.resultsShow = true;
@@ -118,7 +120,7 @@ module.exports = {
     },
 
     startBoardClient() {
-      hasErrors = false;
+      var hasErrors = false;
 
       // station stationId must be exactly 8 characters long
       if (this.stationId.length != 8) {
@@ -128,22 +130,22 @@ module.exports = {
       }
 
       if (hasErrors) {
-        notyf.error("Please correct errors");
+        this.notyf.error("Please correct errors");
         return;
       }
 
       // start board client
-      axios
+      this.axios
         .post(
           '/transilien/start-client',
           { 'station_id': this.stationId }
         )
         .then((response) => {
             if (response.data.status == "OK") {
-              notyf.success("Showing departures for " + this.stationId);
+              this.notyf.success("Showing departures for " + this.stationId);
             }
             else if (response.data.status == "error") {
-              notyf.error(this.stationId + ": " + response.data.message);
+              this.notyf.error(this.stationId + ": " + response.data.message);
             }
           }
         );

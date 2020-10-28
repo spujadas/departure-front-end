@@ -15,7 +15,39 @@ This front end Departure supports the following operators:
 
 
 
-See the [Departure-Python documentation page](https://departure-python.readthedocs.io/) for instructions on how to install the front end.
+See the [Departure-Python documentation page](https://departure-python.readthedocs.io/) for instructions on how to install the front end for use with the Departure web API server (`departure-web`).
+
+
+
+### Releases
+
+Pre-built releases of the static files (HTML, JavaScript, assets) of the front end can be found in the repository's [Releases](https://github.com/spujadas/departure-front-end/releases).
+
+
+
+### Build
+
+To build the static files yourself, for instance if you want to contribute to the project, first install [Node.js](https://nodejs.org/) and [yarn](https://yarnpkg.com/).
+
+Next, install the project's prerequisites:
+
+```
+yarn install
+```
+
+To compile and minify the app for production, run the following command:
+
+```
+yarn build
+```
+
+The bundled app will be located in the `dist` subdirectory, which you can then expose to the Departure web API server (`departure-web`).
+
+To automatically rebuild the app when you make a change to the source, you can run: 
+
+```
+yarn build --watch
+```
 
 
 

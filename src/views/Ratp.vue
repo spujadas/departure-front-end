@@ -1,6 +1,6 @@
 <template>
-  <div id="tfl-tube">
-    <h1 class="d-lg-none">London Underground</h1>
+  <div id="ratp">
+    <h1 class="d-lg-none">RATP</h1>
     <div class="row mt-lg-3">
       <!-- search panel -->
       <div id="search" class="col-lg-6" style="padding-right:20px; border-right: 1px solid rgba(0, 0, 0, 0.1);">
@@ -29,49 +29,75 @@
         <hr/>
 
         <!-- search by line -->
-        <div v-if="searchByLineActive" id="lines" class="mt-2">
-          <div class="row">
-            
-            <!-- label -->
-            <div class="col-xl-6">
-              <p><strong>Select a line</strong></p>
-            </div>
+        <div v-if="searchByLineActive" id="line-search" class="mt-2">
+          <!-- search by line form -->
+          <div class="form-group">
+            <div class="row">
+              <!-- line input -->
+              <div class="col-xl-6">
+                <input
+                  class="form-control"
+                  v-model="lineCodeQuery"
+                  placeholder="line number"
+                  @input="callDebounceLineSearch"
+                >
+              </div>
 
-            <!-- show/hide results button -->
-            <div class="col-xl-6 mt-3 mt-xl-0">
-              <button
-                class="btn btn-secondary form-control"
-                @click="linesListShow = !linesListShow"
-              >
-                Show/hide lines
-              </button>
+              <!-- spinner and show/hide results button -->
+              <div class="col-xl-6 mt-3 mt-xl-0">
+                <div
+                  v-if="linesListLoading && !linesShow"
+                  class="d-flex align-items-center"
+                >
+                  <strong>Loading...</strong>
+                  <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
+                </div>
+                <button v-if="linesShow"
+                  type="button" class="form-control btn btn-secondary"
+                  @click="linesListShow = !linesListShow"
+                >
+                  Show/hide results
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- search by line results -->
-          <ul v-if="linesListShow" class="list-group list-group-flush">
-            <li
-              class="list-group-item"
-              v-for="(name, id) in lines"
-              :key="id"
-              @click="setLine(id)"
-            >
-              <strong class="px-2 py-1" :class="id">{{name}}</strong>
-              <mark>{{ id }}</mark>
-            </li>
-          </ul>
+          <div v-if="linesListShow" id="line-results">
+            <p><strong>Select a line</strong></p>
+            <ul class="list-group list-group-flush">
+              <li
+                class="list-group-item"
+                v-for="line in lines"
+                :key="line.id"
+                @click="setLine(line)"
+              >
+                <img
+                  v-if="line.image != ''"
+                  :src="line.image"
+                  :alt="line.reseau + ' ' + line.code"
+                  :title="line.reseau + ' ' + line.code"
+                >
+                <strong v-if="line.image == ''">
+                  [{{ line.reseau }} {{ line.code }}]
+                </strong>
+                {{line.name}}
+                <mark>{{ line.id }}</mark>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <!-- stations on line -->
         <div id="line-stations">
           <!-- stations on line form -->
-          <div class="form-group" v-if="lineStationsShow" id="line-stations-results">
+          <div v-if="lineStationsShow" id="line-stations-results">
             <hr/>
             <div class="row">
 
               <!-- label -->
               <div class="col-xl-6">
-                <p><strong>Select a station on {{ currentLineFriendlyName }} line</strong></p>
+                <p><strong>Select a station on {{ currentLineFriendlyName }}</strong></p>
               </div>
 
               <!-- spinner and show/hide results button -->
@@ -99,11 +125,11 @@
           <ul class="list-group list-group-flush" v-if="lineStationsListShow">
             <li
               class="list-group-item"
-              v-for="(stationData, stationId) in lineStations"
-              :key="stationId"
-              @click="setStation(stationId)"
+              v-for="station in lineStationsList"
+              :key="station.line.id + ' ' + station.line_station_id"
+              @click="setStation(station)"
             >
-                {{stationData.name}} <mark>{{ stationId }}</mark>
+              {{station.name}} <mark>{{station.line_station_id}}</mark>
             </li>
           </ul>
         </div>
@@ -146,17 +172,24 @@
           <div v-if="stationsListShow" id="stations-list">
             <p><strong>Select a station</strong></p>
             <ul class="list-group list-group-flush">
-              <template v-for="(stationData, stationId) in stations">
-                <li
-                  v-for="lineId in stationData.lines"
-                  class="list-group-item"
-                  :key="lineId + ' ' + stationId"
-                  @click="setLineAndStation(lineId, stationId)"
+              <li
+                v-for="station in stations"
+                class="list-group-item"
+                :key="station.line.id + ' ' + station.line_station_id"
+                @click="setStation(station)"
+              >
+                <img
+                  v-if="station.line.image != ''"
+                  :src="station.line.image"
+                  :alt="station.line.reseau + ' ' + station.line.code"
+                  :title="station.line.reseau + ' ' + station.line.code"
                 >
-                  <span class="px-2 py-1" :class="lineId">{{ stationData.name }}</span>
-                  <mark>{{ lineId }} / {{ stationId }}</mark>
-                </li>
-              </template>
+                <strong v-if="station.line.image == ''">
+                  [{{ station.line.reseau }} {{ station.line.code }}]
+                </strong>
+
+                {{ station.name }} <mark>{{ station.line.id}} / {{ station.line_station_id }}</mark>
+              </li>
             </ul>
           </div>
         </div>  <!-- end search panel -->
@@ -168,7 +201,7 @@
           <div class="row">
             <!-- label -->
             <div class="col-xl-6">
-              <p><strong>Select a direction for {{ currentLineDirectionsFriendlyName }} line</strong></p>
+              <p><strong>Select a direction for {{ currentLineDirectionsFriendlyName }}</strong></p>
             </div>
 
             <!-- spinner -->
@@ -186,20 +219,21 @@
           <!-- directions list -->
           <ul v-if="directionsListShow" class="list-group list-group-flush">
             <li
-              v-for="d in directions"
+              v-for="(name, sens) in directions"
               class="list-group-item"
-              :key="d"
+              :key="sens"
               @click="
-                direction = d;
-                directionHasErrors = false;
+                directionSens = sens;
+                directionSensHasErrors = false;
                 scrollToStart();
             ">
-              {{ d }}
+              {{ name }} <mark>{{ sens }}</mark>
             </li>
+          </ul>
         </div>
 
         <hr class="d-lg-none"/>
-        
+
       </div>
 
 
@@ -210,7 +244,7 @@
           <input
             class="form-control"
             v-model="lineId"
-            placeholder="e.g. district"
+            placeholder="e.g. RB, B195"
             @input="lineIdHasErrors = false;"
             @keyup.enter="startBoardClient"
             :class="{ 'is-invalid': lineIdHasErrors }"
@@ -224,14 +258,14 @@
           <label>Station ID on line</label>
           <input
             class="form-control"
-            v-model="stationId"
-            placeholder="e.g. 940GZZLUVIC"
-            @input="stationIdHasErrors = false;"
+            v-model="lineStationId"
+            placeholder="e.g. 15, 195_6418_6465"
+            @input="lineStationIdHasErrors = false;"
             @keyup.enter="startBoardClient"
-            :class="{ 'is-invalid': stationIdHasErrors }"
+            :class="{ 'is-invalid': lineStationIdHasErrors }"
           >
           <div class="invalid-feedback">
-            {{ stationIdErrorMessage }}
+            {{ lineStationIdErrorMessage }}
           </div>
         </div>
 
@@ -239,14 +273,14 @@
           <label>Direction</label>
           <input
             class="form-control"
-            v-model="direction"
-            placeholder="e.g. Westbound, Inner Rail"
-            @input="directionHasErrors = false;"
+            v-model="directionSens"
+            placeholder="A/R"
+            @input="directionSensHasErrors = false;"
             @keyup.enter="startBoardClient"
-            :class="{ 'is-invalid': directionHasErrors }"
+            :class="{ 'is-invalid': directionSensHasErrors }"
           >
           <div class="invalid-feedback">
-            {{ directionErrorMessage }}
+            {{ directionSensErrorMessage }}
           </div>
         </div>
 
@@ -256,7 +290,7 @@
             type="button"
             class="btn btn-primary form-control"
             ref="start"
-            :disabled="!lineId || !stationId || !direction"
+            :disabled="!lineId || !lineStationId || !directionSens"
           >
             ▶ Start board client
           </button>
@@ -268,21 +302,28 @@
 
 
 <script>
-module.exports = {
-  name: 'TflTube',
+import { debounce } from 'lodash';
+
+export default {
+  name: 'Ratp',
+
+  inject: ['notyf'],
 
   data() {
     return {
       // navigation
       searchByLineActive: true,
       searchByStationActive: false,
-      
+
       // search forms
+      lineCodeQuery: '',
       lines: [],
+      linesShow: false,
+      linesListLoading: false,
       linesListShow: false,
 
-      lineStations: [],
       lineStationsShow: false,
+      lineStations: [],
       lineStationsListLoading: false,
       lineStationsListShow: false,
 
@@ -306,24 +347,14 @@ module.exports = {
       lineIdHasErrors: false,
       lineIdErrorMessage: '',
 
-      stationId: '',
-      stationIdHasErrors: false,
-      stationIdErrorMessage: '',
+      lineStationId: '',
+      lineStationIdHasErrors: false,
+      lineStationIdErrorMessage: '',
 
-      direction: '',
-      directionHasErrors: false,
-      directionErrorMessage: '',
+      directionSens: '',
+      directionSensHasErrors: false,
+      directionSensErrorMessage: '',
     }
-  },
-
-  mounted() {
-    // get lines
-    axios
-      .get('/tfl-tube/lines')
-      .then(response => {
-        this.lines = response.data;
-        this.linesListShow = true;
-      });
   },
 
   methods: {
@@ -336,12 +367,10 @@ module.exports = {
       this.searchByLineActive = true;
       this.searchByStationActive = false;
 
-      this.linesListShow = true;
-
+      this.lineCodeQuery = '';
       this.stationsShow = false;
       this.stationsListShow = false;
-
-this.directionsShow = false;
+      this.directionsShow = false;
     },
 
     activateSearchByStation() {
@@ -353,15 +382,44 @@ this.directionsShow = false;
       this.searchByStationActive = true;
 
       this.stationNameQuery = '';
-
+      this.linesShow = false;
       this.linesListShow = false;
       this.lineStationsShow = false;
       this.lineStationsListShow = false;
-
       this.directionsShow = false;
     },
 
-    callDebounceStationSearch: _.debounce(function(){
+    // from https://codepen.io/rabelais88/pen/yqQpMy
+    callDebounceLineSearch: debounce(function(){
+      this.lineSearch();
+    }, 200), // wait for Xms after user has finished typing before searching
+
+    lineSearch() {
+      // ignore and hide search results if query is empty
+      if (this.lineCodeQuery.length == 0) {
+        return;
+      }
+
+      this.linesShow = false;
+      this.linesListShow = false;
+      this.linesListLoading = true;
+      this.lineStationsShow = false;
+
+      this.lineStationsListShow = false;
+      this.directionsShow = false;
+
+      // perform search
+      this.axios
+        .get('/ratp/lines-by-code/' + this.lineCodeQuery)
+        .then(response => {
+          this.lines = response.data;
+          this.linesShow = true;
+          this.linesListLoading = false;
+          this.linesListShow = true;
+        });
+    },
+
+    callDebounceStationSearch: debounce(function(){
       this.stationSearch();
     }, 200), // wait for Xms after user has finished typing before searching
 
@@ -375,8 +433,8 @@ this.directionsShow = false;
       this.stationsListLoading = true;
 
       // perform search
-      axios
-        .get('/tfl-tube/stations/' + this.stationNameQuery)
+      this.axios
+        .get('/ratp/stations/' + this.stationNameQuery)
         .then(response => {
           this.stations = response.data
           this.stationsShow = true;
@@ -385,37 +443,40 @@ this.directionsShow = false;
         });
     },
 
-    setLine(lineId) {
-      this.lineId = lineId;
+    setLine(line) {
+      this.lineId = line.id;
       this.lineIdHasErrors = false;
-      this.stationId = '';
-      this.stationIdHasErrors = false;
-      this.direction = '';
-      this.directionHasErrors = false;
+      this.lineStationId = '';
+      this.lineStationIdHasErrors = false;
+      this.directionSens = '';
+      this.directionSensHasErrors = false;
 
-      this.currentLineFriendlyName = this.lines[lineId];
+      this.currentLineFriendlyName = line.reseau + ' ' + line.code;
       this.currentLineDirectionsFriendlyName = this.currentLineFriendlyName
       this.linesListShow = false;
 
-      this.listLineStations(lineId);
-      this.listLineDirections(lineId);
+      this.listLineStations(line.id);
+      this.listLineDirections(line.id);
     },
 
-    setStation(stationId) {
-      this.stationId = stationId;
-      this.stationIdHasErrors = false;
+    setStation(station) {
+      if (this.lineId != station.line.id) {
+        this.lineId = station.line.id;
+        this.lineIdHasErrors = false;
+        this.directionSens = ''; /* don't reset direction if station on same line */
+        this.directionSensHasErrors = false;
+      }
+      this.lineStationId = station.line_station_id;
+      this.lineStationIdHasErrors = false;
 
       this.linesListShow = false;
       this.lineStationsListShow = false;
-    },
-
-    setLineAndStation(lineId, stationId) {
-      this.lineId = lineId;
-      this.stationId = stationId;
-      this.stationIdHasErrors = false;
-
       this.stationsListShow = false;
-      this.listLineDirections(lineId);
+
+      this.currentLineFriendlyName = station.line.reseau + ' ' + station.line.code;
+      this.currentLineDirectionsFriendlyName = this.currentLineFriendlyName
+
+      this.listLineDirections(station.line.id);
     },
 
     listLineStations(lineId) {
@@ -423,10 +484,10 @@ this.directionsShow = false;
       this.lineStationsListShow = false;
       this.lineStationsListLoading = true;
 
-      axios
-        .get('/tfl-tube/stations-line/' + lineId)
+      this.axios
+        .get('/ratp/stations-line/' + lineId)
         .then(response => {
-          this.lineStations = response.data;
+          this.lineStationsList = response.data;
           this.lineStationsListLoading = false;
           this.lineStationsListShow = true;
         });
@@ -434,16 +495,16 @@ this.directionsShow = false;
 
     listLineDirections(lineId) {
       this.directionsShow = true;
-      
+
       // don't fetch if already displaying directions for requested line
       if (lineId == this.directionsLineId) {
         return;
       }
-      
+
       this.directionsListShow = false
       this.directionsListLoading = true;
-      axios
-        .get('/tfl-tube/directions/' + lineId)
+      this.axios
+        .get('/ratp/directions/' + lineId)
         .then(response => {
           this.directions = response.data;
           this.directionsLineId = lineId;
@@ -458,49 +519,49 @@ this.directionsShow = false;
 
     startBoardClient() {
       // validate parameters
-      hasErrors = false
+      var hasErrors = false
       this.lineIdHasErrors = false;
-      this.stationIdHasErrors = false;
-      this.directionHasErrors = false;
+      this.lineStationIdHasErrors = false;
+      this.directionSensHasErrors = false;
 
       if (this.lineId.length == 0) {
         this.lineIdErrorMessage = "Please enter a line ID";
         this.lineIdHasErrors = true;
         hasErrors = true;
       }
-      if (this.stationId.length == 0) {
-        this.stationIdErrorMessage = "Please enter a station ID";
-        this.stationIdHasErrors = true;
+      if (this.lineStationId.length == 0) {
+        this.lineStationIdErrorMessage = "Please enter a station ID";
+        this.lineStationIdHasErrors = true;
         hasErrors = true;
       }
-      if (this.direction.length == 0) {
-        this.directionErrorMessage = "Please enter a direction";
-        this.directionHasErrors = true;
+      if (!['A', 'R'].includes(this.directionSens)) {
+        this.directionSensErrorMessage = "Please enter a valid direction (A/R)";
+        this.directionSensHasErrors = true;
         hasErrors = true;
       }
 
       if (hasErrors) {
-        notyf.error("Please correct errors");
+        this.notyf.error("Please correct errors");
         return;
       }
 
       // start board client
-      axios
+      this.axios
         .post(
-          '/tfl-tube/start-client',
+          '/ratp/start-client',
           {
             'line_id': this.lineId,
-            'station_id': this.stationId,
-            'direction': this.direction,
+            'line_station_id': this.lineStationId,
+            'direction': this.directionSens,
           }
         )
         .then((response) => {
             if (response.data.status == "OK") {
-              notyf.success("Showing departures for " + this.lineId + "/" 
-                + this.stationId + "/" + this.direction);
+              this.notyf.success("Showing departures for " + this.lineId + "/"
+                + this.lineStationId + "/" + this.directionSens);
             }
             else if (response.data.status == "error") {
-              notyf.error(this.stationId + ": " + response.data.message);
+              this.notyf.error(this.lineStationId + ": " + response.data.message);
             }
           }
         );
@@ -508,60 +569,3 @@ this.directionsShow = false;
   },
 }
 </script>
-
-<style>
-.bakerloo {
-	color: white;
-	background-color: rgb(178, 99, 0);
-}
-
-.hammersmith-city {
-	color: black;
-	background-color: rgb(244, 169, 190);
-}
-
-.piccadilly {
-	color: white;
-	background-color: rgb(0, 25, 168);
-}
-
-.central {
-	color: white;
-	background-color: rgb(220, 36, 31);
-}
-
-.jubilee {
-	color: white;
-	background-color: rgb(161, 165, 167);
-}
-
-.victoria {
-	color: black;
-	background-color: rgb(0, 152, 216);
-}
-
-.circle {
-	color: black;
-	background-color: rgb(255, 211, 41);
-}
-
-.metropolitan {
-	color: white;
-	background-color: rgb(155, 0, 88);
-}
-
-.waterloo-city {
-	color: black;
-	background-color: rgb(147, 206, 186);
-}
-
-.district {
-	color: white;
-	background-color: rgb(0, 125, 50);
-}
-
-.northern {
-	color: white;
-	background-color: rgb(0, 0, 0);
-}
-</style>
