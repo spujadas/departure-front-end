@@ -1,0 +1,66 @@
+name: Build and release a production-ready bundle
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+
+      - name: Install dependencies and build
+        run: |
+          yarn install
+          yarn build
+
+      - name: Set bundle basename
+        id: set_basename
+        shell: bash
+        run: echo ::set-output name=BASENAME::departure-front-end_${GITHUB_REF#refs/tags/}
+
+      - name: zip and tgz bundle
+        run: |
+          cd dist
+          zip -r ../${{ steps.set_basename.outputs.BASENAME }}.zip .
+          tar czf ../${{ steps.set_basename.outputs.BASENAME }}.tar.gz .
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload zipped bundle
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ${{ github.workspace }}/${{ steps.set_basename.outputs.BASENAME }}.zip
+          asset_name: ${{ steps.set_basename.outputs.BASENAME }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload tgz'd bundle
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/${{ steps.set_basename.outputs.BASENAME }}.tar.gz
+          asset_name: ${{ steps.set_basename.outputs.BASENAME }}.tar.gz
+          asset_content_type: application/gzip
