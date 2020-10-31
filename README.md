@@ -2,7 +2,7 @@
 
 This repository contains a web front end for the [Departure web API server](https://github.com/spujadas/departure-python).
 
-![Departure web front end - SNCF Montparnasse](https://user-images.githubusercontent.com/930566/95666197-a39d7e00-0b57-11eb-9856-89579708c146.gif)
+![Departure web front end - SNCF Montparnasse](https://user-images.githubusercontent.com/930566/97785001-d65cf400-1ba2-11eb-8882-67284742c22c.gif)
 
 This front end Departure supports the following operators:
 
@@ -53,7 +53,10 @@ yarn build --watch
 
 ### About
 
-Written by [Sébastien Pujadas](https://pujadas.net/), released under the [MIT license](https://github.com/spujadas/departure-python/blob/master/LICENSE).
+Written by [Sébastien Pujadas](https://pujadas.net/), released under the [MIT license](https://github.com/spujadas/departure-python/blob/master/LICENSE), with additional provisions as per below.
 
 All product names, logos, and brands are property of their respective owners. All company, product and service names used in this project are for identification purposes only. Use of these names, logos, and brands does not imply endorsement.
 
+Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016' and Geomni UK Map data © and database rights [2019].
+
+Powered by [National Rail Enquiries](https://www.nationalrail.co.uk/).

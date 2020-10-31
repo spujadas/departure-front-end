@@ -23,7 +23,6 @@
               class="nav-link flex-fill text-center"
               active-class="active"
             >
-              <img :src="providerData.logoSrc" :alt="providerData.logoAlt" style="height: 1.5em; width: auto;"/>
               {{providerData.name}}
             </router-link>
           </li>
@@ -71,38 +70,26 @@ export default {
     this.providers = {
       'tfl-tube': {
         'to': '/tfl-tube',
-        'logoSrc': require('./assets/tfl-tube.png'),
-        'logoAlt': '[Tube (TfL)]',
         'name': 'London Underground 🇬🇧'
       },
       'national-rail': {
         'to': '/national-rail',
-        'logoSrc': require('./assets/national-rail.png'),
-        'logoAlt': '[NR]',
         'name': 'National Rail 🇬🇧'
       },
       'ns': {
         'to': '/ns',
-        'logoSrc': require('./assets/ns.png'),
-        'logoAlt': '[NS]',
         'name': 'Nederlandse Spoorwegen 🇳🇱'
       },
       'ratp': {
         'to': '/ratp',
-        'logoSrc': require('./assets/ratp.png'),
-        'logoAlt': '[RATP]',
         'name': 'RATP 🇫🇷'
       },
       'sncf': {
         'to': '/sncf',
-        'logoSrc': require('./assets/sncf.png'),
-        'logoAlt': '[SNCF]',
         'name': 'SNCF 🇫🇷'
       },
       'transilien': {
         'to': '/transilien',
-        'logoSrc': require('./assets/transilien.png'),
-        'logoAlt': '[Tube (TfL)]',
         'name': 'Transilien 🇫🇷'
       }
     };
